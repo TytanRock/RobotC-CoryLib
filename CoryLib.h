@@ -11,8 +11,8 @@ typedef struct
 //Drivetrain struct for types of driving
 typedef struct
 {
-	tGearBox leftGearbox;
-	tGearBox rightGearbox;
+	tGearBox *leftGearbox;
+	tGearBox *rightGearbox;
 }tDriveTrain;
 
 //Create the gearboxes based on number of motors
@@ -22,22 +22,22 @@ void createGearBox(tGearBox &gearBox, int m1 = -1, int m2 = -1, int m3 = -1, int
 	if(m1 != -1)
 	{
 		gearBox.motors[0] = m1;
-		numberOfMotors++;
+		numberOfMotors = 1;
 	}
 	if(m2 != -1)
 	{
 		gearBox.motors[1] = m2;
-		numberOfMotors++;
+		numberOfMotors = 2;
 	}
 	if(m3 != -1)
 	{
 		gearBox.motors[2] = m3;
-		numberOfMotors++;
+		numberOfMotors = 3;
 	}
 	if(m4 != -1)
 	{
 		gearBox.motors[3] = m4;
-		numberOfMotors++;
+		numberOfMotors = 4;
 	}
 	gearBox.numMotors = numberOfMotors;
 }
@@ -45,8 +45,8 @@ void createGearBox(tGearBox &gearBox, int m1 = -1, int m2 = -1, int m3 = -1, int
 //Create the drivetrain from your gearbox
 void createDriveTrain(tDriveTrain &driveTrain, tGearBox left, tGearBox right)
 {
-	driveTrain.leftGearbox = left;
-	driveTrain.rightGearbox = right;
+	driveTrain.leftGearbox = &left;
+	driveTrain.rightGearbox = &right;
 }
 
 //Arcade drive based on throttle and wheel
@@ -54,26 +54,26 @@ void arcadeDrive(tDriveTrain driveTrain, int throttle, int wheel)
 {
 	int leftSide = throttle + wheel;
 	int rightSide = throttle - wheel;
-	for(int i = 0; i < driveTrain.leftGearbox.numMotors; i++)
+	for(int i = 0; i < driveTrain.leftGearbox->numMotors; i++)
 	{
-		driveTrain.leftGearbox.motors[i] = leftSide;
+		motor[driveTrain.leftGearbox->motors[i]] = leftSide;
 	}
-	for(int i = 0; i < driveTrain.rightGearbox.numMotors; i++)
+	for(int i = 0; i < driveTrain.rightGearbox->numMotors; i++)
 	{
-		driveTrain.rightGearbox.motors[i] = rightSide;
+		motor[driveTrain.rightGearbox->motors[i]] = rightSide;
 	}
 }
 
 //Tank drive based on side power
 void tankDrive(tDriveTrain driveTrain, int leftSide, int rightSide)
 {
-	for(int i = 0; i < driveTrain.leftGearbox.numMotors; i++)
+	for(int i = 0; i < driveTrain.leftGearbox->numMotors; i++)
 	{
-		driveTrain.leftGearbox.motors[i] = leftSide;
+		motor[driveTrain.leftGearbox->motors[i]] = leftSide;
 	}
-	for(int i = 0; i < driveTrain.rightGearbox.numMotors; i++)
+	for(int i = 0; i < driveTrain.rightGearbox->numMotors; i++)
 	{
-		driveTrain.rightGearbox.motors[i] = rightSide;
+		motor[driveTrain.rightGearbox->motors[i]] = rightSide;
 	}
 }
 
@@ -86,7 +86,7 @@ void buttonManipulate(tGearBox gearBox, bool buttonUp, bool buttonDown, int powe
 	else power = 0;
 	for(int i = 0; i < gearBox.numMotors; i++)
 	{
-		gearBox.motors[i] = power;
+		motor[gearBox.motors[i]] = power;
 	}
 }
 
@@ -95,7 +95,7 @@ void stickManipulate(tGearBox gearBox, int power)
 {
 	for(int i = 0; i < gearBox.numMotors; i++)
 	{
-		gearBox.motors[i] = power;
+		motor[gearBox.motors[i]] = power;
 	}
 }
 
