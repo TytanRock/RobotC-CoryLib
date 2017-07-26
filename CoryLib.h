@@ -15,6 +15,24 @@ typedef struct
 	tGearBox *rightGearbox;
 }tDriveTrain;
 
+//Positional closed loop struct for closed loop control
+typedef struct
+{
+	tGearBox *gearBox;
+	float kP;
+	float kI;
+	float kD;
+	float lastError;
+	float lastI;
+}tPositionalGearbox;
+
+int limit(int inValue)
+{
+	if(inValue > 127) return 127;
+	if(inValue < -127) return -127;
+	return inValue;
+}
+
 //Create the gearboxes based on number of motors
 void createGearBox(tGearBox &gearBox, int m1 = -1, int m2 = -1, int m3 = -1, int m4 = -1)
 {
@@ -49,6 +67,15 @@ void createDriveTrain(tDriveTrain &driveTrain, tGearBox left, tGearBox right)
 	driveTrain.rightGearbox = &right;
 }
 
+//Create positional gearbox with PID Gains
+void createPositionalGearbox(tPositionalGearbox &sensoredGearbox, tGearBox normalGearbox, float kP, float kI, float kD)
+{
+	sensoredGearbox.gearBox = &normalGearbox;
+	sensoredGearbox.kP = kP;
+	sensoredGearbox.kI = kI;
+	sensoredGearbox.kD = kD;
+}
+
 //Arcade drive based on throttle and wheel
 void arcadeDrive(tDriveTrain driveTrain, int throttle, int wheel)
 {
@@ -56,11 +83,11 @@ void arcadeDrive(tDriveTrain driveTrain, int throttle, int wheel)
 	int rightSide = throttle - wheel;
 	for(int i = 0; i < driveTrain.leftGearbox->numMotors; i++)
 	{
-		motor[driveTrain.leftGearbox->motors[i]] = leftSide;
+		motor[driveTrain.leftGearbox->motors[i]] = limit(leftSide);
 	}
 	for(int i = 0; i < driveTrain.rightGearbox->numMotors; i++)
 	{
-		motor[driveTrain.rightGearbox->motors[i]] = rightSide;
+		motor[driveTrain.rightGearbox->motors[i]] = limit(rightSide);
 	}
 }
 
@@ -69,11 +96,11 @@ void tankDrive(tDriveTrain driveTrain, int leftSide, int rightSide)
 {
 	for(int i = 0; i < driveTrain.leftGearbox->numMotors; i++)
 	{
-		motor[driveTrain.leftGearbox->motors[i]] = leftSide;
+		motor[driveTrain.leftGearbox->motors[i]] = limit(leftSide);
 	}
 	for(int i = 0; i < driveTrain.rightGearbox->numMotors; i++)
 	{
-		motor[driveTrain.rightGearbox->motors[i]] = rightSide;
+		motor[driveTrain.rightGearbox->motors[i]] = limit(rightSide);
 	}
 }
 
@@ -86,7 +113,7 @@ void buttonManipulate(tGearBox gearBox, bool buttonUp, bool buttonDown, int powe
 	else power = 0;
 	for(int i = 0; i < gearBox.numMotors; i++)
 	{
-		motor[gearBox.motors[i]] = power;
+		motor[gearBox.motors[i]] = limit(power);
 	}
 }
 
@@ -95,7 +122,20 @@ void stickManipulate(tGearBox gearBox, int power)
 {
 	for(int i = 0; i < gearBox.numMotors; i++)
 	{
-		motor[gearBox.motors[i]] = power;
+		motor[gearBox.motors[i]] = limit(power);
+	}
+}
+
+void positionControl(tPositionalGearbox gearbox, float error)
+{
+	float proportion = gearbox.kP * error;
+	float integral = (gearbox.kI * error) + gearbox.lastI;
+	float derivative = (error - gearbox.lastError) * gearbox.kD;
+	float outValue = proportion + integral + derivative;
+	gearBox.lastError = error;
+	for(int i = 0; i < gearbox.gearBox->numMotors; i++)
+	{
+		motor[gearbox.gearBox->motors[i]] = limit(outValue);
 	}
 }
 
