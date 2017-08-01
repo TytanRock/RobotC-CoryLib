@@ -132,7 +132,7 @@ void positionControl(tPositionalGearbox gearbox, float error)
 	float integral = (gearbox.kI * error) + gearbox.lastI;
 	float derivative = (error - gearbox.lastError) * gearbox.kD;
 	float outValue = proportion + integral + derivative;
-	gearBox.lastError = error;
+	gearbox.lastError = error;
 	for(int i = 0; i < gearbox.gearBox->numMotors; i++)
 	{
 		motor[gearbox.gearBox->motors[i]] = limit(outValue);
